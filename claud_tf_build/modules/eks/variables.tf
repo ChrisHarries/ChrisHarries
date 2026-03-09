@@ -73,30 +73,30 @@ variable "kms_key_id" {
 # EKS Add-on versions
 # Pin these explicitly so applies never surprise-upgrade an add-on.
 # Check latest versions with:
-#   aws eks describe-addon-versions --kubernetes-version 1.30 \
+#   aws eks describe-addon-versions --kubernetes-version 1.32 \
 #     --addon-name <name> --query 'addons[].addonVersions[0].addonVersion'
 # ------------------------------------------------------------------
 
 variable "addon_version_coredns" {
   description = "Version of the coredns EKS add-on"
   type        = string
-  default     = "v1.11.1-eksbuild.11"
+  default     = "v1.11.4-eksbuild.2"
 }
 
 variable "addon_version_kube_proxy" {
   description = "Version of the kube-proxy EKS add-on"
   type        = string
-  default     = "v1.30.3-eksbuild.5"
+  default     = "v1.32.0-eksbuild.2"
 }
 
 variable "addon_version_vpc_cni" {
   description = "Version of the vpc-cni EKS add-on"
   type        = string
-  default     = "v1.18.3-eksbuild.3"
+  default     = "v1.19.2-eksbuild.5"
 }
 
 variable "addon_version_pod_identity_agent" {
   description = "Version of the eks-pod-identity-agent EKS add-on"
   type        = string
-  default     = "v1.3.2-eksbuild.2"
+  default     = "v1.3.4-eksbuild.1"
 }

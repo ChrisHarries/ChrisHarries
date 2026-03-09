@@ -45,7 +45,7 @@ variable "public_subnet_cidrs" {
 variable "cluster_version" {
   description = "Kubernetes version for the EKS cluster"
   type        = string
-  default     = "1.30"
+  default     = "1.32"
 }
 
 variable "cluster_endpoint_public_access" {
@@ -125,7 +125,7 @@ variable "datadog_api_url" {
 variable "datadog_agent_chart_version" {
   description = "Version of the datadog/datadog Helm chart to deploy"
   type        = string
-  default     = "3.69.0"
+  default     = "3.88.0"
 }
 
 variable "datadog_monitor_notification_targets" {
@@ -151,7 +151,7 @@ variable "db_master_username" {
 variable "db_engine_version" {
   description = "Aurora PostgreSQL engine version"
   type        = string
-  default     = "16.4"
+  default     = "17.4"
 }
 
 variable "db_instance_class" {

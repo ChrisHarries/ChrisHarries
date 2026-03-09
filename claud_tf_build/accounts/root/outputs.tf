@@ -37,3 +37,18 @@ output "dev_account_id" {
   description = "AWS account ID of the development member account"
   value       = aws_organizations_account.dev.id
 }
+
+output "security_account_id" {
+  description = "AWS account ID of the security member account"
+  value       = aws_organizations_account.security.id
+}
+
+output "ou_security_id" {
+  description = "ID of the Security OU"
+  value       = aws_organizations_organizational_unit.security.id
+}
+
+output "cloudtrail_kms_key_arn" {
+  description = "ARN of the CloudTrail CMK — pass to security stack for bucket policy reference"
+  value       = aws_kms_key.cloudtrail.arn
+}

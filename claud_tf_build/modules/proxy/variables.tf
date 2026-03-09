@@ -14,9 +14,9 @@ variable "subnet_id" {
 }
 
 variable "instance_type" {
-  description = "EC2 instance type for the proxy"
+  description = "EC2 instance type for the proxy (must be ARM/Graviton — AMI filter targets arm64)"
   type        = string
-  default     = "t3.small"
+  default     = "t4g.nano"
 }
 
 variable "kms_key_id" {
