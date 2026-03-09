@@ -1,0 +1,162 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+env:
+  TF_VERSION: "1.9.0"
+  TFLINT_VERSION: "v0.50.3"
+
+jobs:
+  # ----------------------------------------------------------------
+  # Format check — fails fast, no provider download needed
+  # ----------------------------------------------------------------
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive .
+
+  # ----------------------------------------------------------------
+  # Validate — init with no backend, then validate modules and
+  # each account stack (root, prod, dev)
+  # ----------------------------------------------------------------
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Validate shared modules
+        run: |
+          for mod in modules/vpc modules/eks modules/iam modules/security_groups \
+                     modules/node_groups modules/proxy modules/database modules/datadog \
+                     modules/secret_rotation bootstrap; do
+            echo "==> Validating $mod"
+            terraform -chdir=$mod init -backend=false -input=false
+            terraform -chdir=$mod validate
+          done
+
+      - name: Validate account stacks
+        run: |
+          for acct in accounts/root accounts/prod accounts/dev; do
+            echo "==> Validating $acct"
+            terraform -chdir=$acct init -backend=false -input=false
+            terraform -chdir=$acct validate
+          done
+
+  # ----------------------------------------------------------------
+  # Lint — tflint with AWS ruleset
+  # ----------------------------------------------------------------
+  lint:
+    name: Lint (tflint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Init tflint
+        run: tflint --init
+
+      - name: Run tflint
+        run: tflint --recursive --format compact
+
+  # ----------------------------------------------------------------
+  # Security scan — checkov
+  # ----------------------------------------------------------------
+  security:
+    name: Security (checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          config_file: .checkov.yaml
+          output_format: cli,sarif
+          output_file_path: reports/
+          soft_fail: false
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: reports/results.sarif
+
+  # ----------------------------------------------------------------
+  # Unit tests — terraform test with mocked providers (no AWS creds)
+  # ----------------------------------------------------------------
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [format, validate]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Run unit tests — vpc
+        run: |
+          terraform -chdir=modules/vpc init -backend=false -input=false
+          terraform -chdir=modules/vpc test
+
+      - name: Run unit tests — iam
+        run: |
+          terraform -chdir=modules/iam init -backend=false -input=false
+          terraform -chdir=modules/iam test
+
+      - name: Run unit tests — security_groups
+        run: |
+          terraform -chdir=modules/security_groups init -backend=false -input=false
+          terraform -chdir=modules/security_groups test
+
+      - name: Run unit tests — eks
+        run: |
+          terraform -chdir=modules/eks init -backend=false -input=false
+          terraform -chdir=modules/eks test
+
+      - name: Run unit tests — node_groups
+        run: |
+          terraform -chdir=modules/node_groups init -backend=false -input=false
+          terraform -chdir=modules/node_groups test
+
+      - name: Run unit tests — proxy
+        run: |
+          terraform -chdir=modules/proxy init -backend=false -input=false
+          terraform -chdir=modules/proxy test
+
+      - name: Run unit tests — database
+        run: |
+          terraform -chdir=modules/database init -backend=false -input=false
+          terraform -chdir=modules/database test
+
+      - name: Run unit tests — datadog
+        run: |
+          terraform -chdir=modules/datadog init -backend=false -input=false
+          terraform -chdir=modules/datadog test
+
+      - name: Run unit tests — secret_rotation
+        run: |
+          terraform -chdir=modules/secret_rotation init -backend=false -input=false
+          terraform -chdir=modules/secret_rotation test
