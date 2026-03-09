@@ -1,0 +1,53 @@
+# Checkov configuration for claude-terraform
+# Run: checkov -d . --config-file .checkov.yaml
+
+directory:
+  - .
+
+framework:
+  - terraform
+
+# Checks to skip — each with a justification comment
+skip-check:
+  # Secrets Manager rotation — not implemented; rotation is handled operationally
+  - CKV_AWS_337
+  - CKV2_AWS_57
+
+  # Secrets Manager KMS CMK — using AWS-managed key (AES256) is sufficient for this project
+  - CKV_AWS_149
+  - CKV_AWS_355
+
+  # Datadog IAM policy uses broad read actions — required by Datadog AWS integration
+  - CKV_AWS_111
+  - CKV_AWS_356
+
+  # Aurora deletion_protection = false is intentional for dev environment
+  - CKV_AWS_162
+
+  # EKS public endpoint — intentional, restricted by CIDR in cluster_endpoint_public_access_cidrs
+  - CKV_AWS_58
+
+  # Proxy EC2 — public subnet placement is intentional (it IS the proxy)
+  - CKV_AWS_8
+
+  # NAT Gateway — we intentionally use one NAT GW per AZ (not one per subnet)
+  - CKV_AWS_24
+
+  # Aurora Performance Insights KMS CMK — using default key is acceptable
+  - CKV_AWS_354
+
+  # EKS secrets encryption — add KMS key to address if required for your compliance posture
+  - CKV_AWS_58
+
+  # S3 access logging on state bucket — bootstrap bucket; add access logging if required
+  - CKV_AWS_144
+  - CKV_AWS_18
+
+output:
+  - cli
+  - json
+
+output-file-path: reports/checkov-results.json
+
+compact: false
+quiet: false

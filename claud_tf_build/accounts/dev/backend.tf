@@ -1,0 +1,13 @@
+# Remote state for the development workload account.
+# Run bootstrap/ first targeting this account, then replace REPLACE_WITH_ACCOUNT_ID.
+# Bucket name format: <project>-dev-tfstate-<account_id>
+
+terraform {
+  backend "s3" {
+    bucket         = "claude-terraform-dev-tfstate-REPLACE_WITH_ACCOUNT_ID"
+    key            = "workloads/terraform.tfstate"
+    region         = "eu-north-1"
+    dynamodb_table = "claude-terraform-dev-tf-locks"
+    encrypt        = true
+  }
+}
